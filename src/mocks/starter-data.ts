@@ -105,7 +105,7 @@ export const starterMeters: Meter[] = [
 ];
 
 // 50 readings across different meters and times
-// Note: Using 2025-09-16 as the base date (from your environment)
+// Note: Using 2025-09-16 as the base date (from environment)
 export const starterReadings: Reading[] = [
   // London HQ - Electricity (30 min intervals for one business day)
   ...Array.from({ length: 24 }, (_, i) => ({

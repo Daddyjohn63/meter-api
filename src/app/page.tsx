@@ -12,17 +12,23 @@ type SearchParams = {
 export default async function Home({
   searchParams
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
   let readings: EnrichedReading[] = [];
   let error = null;
 
   try {
-    const searchQuery = searchParams?.search || '';
+    const resolvedSearchParams = await searchParams;
+    const searchQuery = resolvedSearchParams?.search || '';
+    const baseUrl =
+      process.env.NODE_ENV === 'production'
+        ? process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3000'
+        : `http://localhost:${process.env.PORT || 3000}`;
+
     const response = await fetch(
-      `http://localhost:3000/api/readings${
-        searchQuery ? `?search=${searchQuery}` : ''
-      }`,
+      `${baseUrl}/api/readings${searchQuery ? `?search=${searchQuery}` : ''}`,
       {
         cache: 'no-store'
       }
