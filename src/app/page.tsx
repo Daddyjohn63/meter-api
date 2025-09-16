@@ -1,25 +1,22 @@
 import ItemsFilter from '@/components/items-filter';
 import type { ApiResponse, EnrichedReading } from './api/readings/route';
 
-// interface GetSearchParams {
-//   search: string;
-// }
-
-type SearchParams = {
-  search?: string;
-};
+import { loadSearchParams } from '@/lib/search-params';
 
 export default async function Home({
   searchParams
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   let readings: EnrichedReading[] = [];
+  let pagination: { totalPages: number } | undefined;
   let error = null;
 
   try {
     const resolvedSearchParams = await searchParams;
-    const searchQuery = resolvedSearchParams?.search || '';
+    const { search, page, pageSize } = await loadSearchParams(
+      resolvedSearchParams
+    );
     const baseUrl =
       process.env.NODE_ENV === 'production'
         ? process.env.VERCEL_URL
@@ -28,7 +25,9 @@ export default async function Home({
         : `http://localhost:${process.env.PORT || 3000}`;
 
     const response = await fetch(
-      `${baseUrl}/api/readings${searchQuery ? `?search=${searchQuery}` : ''}`,
+      `${baseUrl}/api/readings?page=${page}&pageSize=${pageSize}${
+        search ? `&search=${search}` : ''
+      }`,
       {
         cache: 'no-store'
       }
@@ -45,6 +44,7 @@ export default async function Home({
     }
 
     readings = result.data;
+    pagination = result.pagination;
   } catch (e) {
     error = e instanceof Error ? e.message : 'An error occurred';
     console.error('Error:', e);
@@ -84,7 +84,7 @@ export default async function Home({
     <div className="font-sans min-h-screen p-8">
       <main className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Energy Readings</h1>
-        <ItemsFilter />
+        <ItemsFilter totalPages={pagination?.totalPages || 1} />
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
